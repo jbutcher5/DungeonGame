@@ -1,7 +1,7 @@
 #include "player.hpp"
 #include <raymath.h>
 
-Player::Player() : hitbox({20, 20}) {
+Player::Player() : hitbox({40, 80}) {
   health = 100;
   position = {0, 0};
 }
@@ -15,10 +15,12 @@ void Player::GetMovement() {
   player_velocity.x += IsKeyDown(KEY_D);
   player_velocity.x -= IsKeyDown(KEY_A);
 
-  player_velocity.x *= 80 * GetFrameTime();
-  player_velocity.y *= 80 * GetFrameTime();
+  player_velocity.x *= 200 * GetFrameTime();
+  player_velocity.y *= 200 * GetFrameTime();
 
   position = Vector2Add(position, player_velocity);
 }
 
-void Player::Draw() { DrawRectangle(position.x, position.y, 20, 20, RED); }
+void Player::Draw() {
+  DrawRectangle(position.x, position.y, hitbox.x, hitbox.y, RED);
+}
