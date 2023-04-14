@@ -1,10 +1,11 @@
-#include <raylib.h>
-#include <raymath.h>
-
 #include "player.hpp"
+#include <cstdlib>
+#include <ctime>
+#include <raylib.h>
 
 int main(void) {
   InitWindow(1820, 980, "Dungeon Game");
+  srand48(time(NULL));
 
   Player player = Player();
 

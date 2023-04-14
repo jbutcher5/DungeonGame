@@ -1,7 +1,7 @@
 #include "player.hpp"
 #include <raymath.h>
 
-Player::Player() : hitbox({40, 80}) {
+Player::Player() : hitbox({60, 180}) {
   health = 100;
   position = {0, 0};
 }
