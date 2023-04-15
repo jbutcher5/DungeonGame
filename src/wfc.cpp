@@ -73,8 +73,22 @@ void TileGeneration::UpdateAdjTiles(Location l) {
           adjacent_location.y < 0 || adjacent_location.y >= input_height)
         continue;
 
-      new_combination.push_back(
-          input[adjacent_location.x][adjacent_location.y]);
+      int new_state = input[adjacent_location.x][adjacent_location.y];
+
+      bool is_in_combinations = false;
+
+      // TODO: Replace with sort and binary search
+
+      for (int state : new_combination)
+        if (state == new_state) {
+          is_in_combinations = true;
+          break;
+        }
+
+      if (!is_in_combinations) {
+        new_combination.push_back(
+            input[adjacent_location.x][adjacent_location.y]);
+      }
     }
 
     Location adjacent_tile =
