@@ -35,6 +35,7 @@ protected:
   std::vector<Location> *id_locations;
 
   bool generation_complete = false;
+  bool max_entropy = true;
 
   WaveFunction *GetTile(Location l) { return buffer[l.x] + l.y; }
   void UpdateAdjTiles(Location l);

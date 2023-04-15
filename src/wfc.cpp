@@ -1,4 +1,5 @@
 #include "wfc.hpp"
+#include <cstdlib>
 #include <vector>
 
 Location TileGeneration::GetMinEntropy() {
@@ -88,7 +89,18 @@ void TileGeneration::UpdateAdjTiles(Location l) {
 }
 
 void TileGeneration::CollapseTile() {
-  Location l = GetMinEntropy();
+  Location l;
+
+  if (!max_entropy)
+    l = GetMinEntropy();
+
+  else {
+    l.x = rand() % output_width;
+    l.y = rand() % output_height;
+
+    max_entropy = false;
+  }
+
   WaveFunction *tile = GetTile(l);
   int i = rand() % tile->Entropy();
   tile->combinations = {tile->combinations[i]};
