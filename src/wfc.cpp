@@ -1,4 +1,5 @@
 #include "wfc.hpp"
+#include <vector>
 
 Location TileGeneration::GetMinEntropy() {
   Location current_lowest = Location();
@@ -48,7 +49,6 @@ TileGeneration::TileGeneration(int output_width, int output_height, int max_id,
 }
 
 void TileGeneration::UpdateAdjTiles(Location l) {
-  std::vector<int> new_combinations[4] = {{}, {}, {}, {}};
   Location offset[4] = {Location(0, 1), Location(0, -1), Location(1, 0),
                         Location(-1, 0)};
 
@@ -61,6 +61,8 @@ void TileGeneration::UpdateAdjTiles(Location l) {
       input_id_locations.push_back(id_l);
 
   for (int adj_tile = 0; adj_tile < 4; adj_tile++) {
+    std::vector<int> new_combination = {};
+
     for (int i = 0; i < input_id_locations.size(); i++) {
       Location adjacent_location = input_id_locations[i];
       adjacent_location.x += offset[adj_tile].x;
@@ -70,15 +72,18 @@ void TileGeneration::UpdateAdjTiles(Location l) {
           adjacent_location.y < 0 || adjacent_location.y >= input_height)
         continue;
 
-      new_combinations[adj_tile].push_back(
+      new_combination.push_back(
           input[adjacent_location.x][adjacent_location.y]);
     }
 
-    // TODO: Maybe remove new_combinations and just have a local variabled in
-    // the for loop
+    Location adjacent_tile =
+        Location(l.x + offset[adj_tile].x, l.y + offset[adj_tile].y);
 
-    GetTile(Location(l.x + offset[adj_tile].x, l.y + offset[adj_tile].y))
-        ->combinations = new_combinations[adj_tile];
+    if (adjacent_tile.x < 0 || adjacent_tile.x >= input_width ||
+        adjacent_tile.y < 0 || adjacent_tile.y >= input_height)
+      continue;
+
+    GetTile(adjacent_tile)->combinations = new_combination;
   }
 }
 

@@ -9,7 +9,7 @@ public:
   int Entropy() { return combinations.size(); };
   WaveFunction(int max) {
     for (int n = 0; n <= max; n++)
-      combinations[n] = n;
+      combinations.push_back(n);
   }
 };
 
