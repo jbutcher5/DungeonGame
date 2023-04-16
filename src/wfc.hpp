@@ -6,11 +6,12 @@
 class WaveFunction {
 public:
   std::vector<int> combinations;
-  int Entropy() { return combinations.size(); };
-  WaveFunction(int max) {
+  inline int Entropy() { return combinations.size(); };
+  inline WaveFunction(int max) {
     for (int n = 0; n <= max; n++)
       combinations.push_back(n);
   }
+  bool updated = false;
 };
 
 struct Location {
@@ -34,12 +35,14 @@ protected:
 
   std::vector<Location> *id_locations;
 
-  bool generation_complete = false;
   bool max_entropy = true;
 
-  WaveFunction *GetTile(Location l) { return buffer[l.x] + l.y; }
-  void UpdateAdjTiles(Location l);
+  std::vector<Location> update_adjacent_queue = {};
+
+  inline WaveFunction *GetTile(Location l) { return buffer[l.x] + l.y; }
+  int UpdateTile(Location l, Location comparee, Location direction);
   void CollapseTile();
+  bool GenerationComplete();
   Location GetMinEntropy();
 
 public:

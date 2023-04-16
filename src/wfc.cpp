@@ -1,30 +1,37 @@
 #include "wfc.hpp"
+#include <cstdio>
 #include <cstdlib>
 #include <vector>
+
+const Location offsets[4] = {Location(0, 1), Location(1, 0), Location(0, -1),
+                             Location(-1, 0)};
 
 Location TileGeneration::GetMinEntropy() {
   Location current_lowest = Location();
   int current;
 
-  bool found_index = false;
-
   for (int i = 0; i < output_width; i++) {
     for (int j = 0; j < output_height; j++) {
       current = buffer[i][j].Entropy();
 
-      if (current == 2)
-        return Location(i, j);
-      else if (current < GetTile(current_lowest)->Entropy() && current > 1) {
-        current_lowest = Location(i, j);
+      int lowest_entropy = GetTile(current_lowest)->Entropy();
 
-        found_index = true;
-      }
+      if ((current < lowest_entropy && current > 1) || lowest_entropy == 1)
+        current_lowest = Location(i, j);
     }
   }
 
-  generation_complete = !found_index;
   return current_lowest;
 };
+
+bool TileGeneration::GenerationComplete() {
+  for (int i = 0; i < output_width; i++)
+    for (int j = 0; j < output_height; j++)
+      if (buffer[i][j].Entropy() > 1)
+        return false;
+
+  return true;
+}
 
 TileGeneration::TileGeneration(int output_width, int output_height, int max_id,
                                int **input, int input_width, int input_height)
@@ -49,60 +56,79 @@ TileGeneration::TileGeneration(int output_width, int output_height, int max_id,
   }
 }
 
-void TileGeneration::UpdateAdjTiles(Location l) {
-  Location offset[4] = {Location(0, 1), Location(0, -1), Location(1, 0),
-                        Location(-1, 0)};
+int TileGeneration::UpdateTile(Location l, const Location comparee,
+                               Location direction) {
+  if (l.x < 0 || l.x >= output_width || l.y < 0 || l.y >= output_height)
+    return 1;
 
-  WaveFunction *tile = GetTile(l);
-  std::vector<int> c = tile->combinations;
-  std::vector<Location> input_id_locations = {};
+  WaveFunction *current = GetTile(l);
+  const WaveFunction *other = GetTile(comparee);
 
-  for (int i = 0; i < c.size(); i++)
-    for (Location id_l : id_locations[c[i]])
-      input_id_locations.push_back(id_l);
+  std::vector<int> new_combination;
 
-  for (int adj_tile = 0; adj_tile < 4; adj_tile++) {
-    std::vector<int> new_combination = {};
+  for (int n : other->combinations) {
+    for (Location id_location : id_locations[n]) {
+      id_location.x += direction.x;
+      id_location.y += direction.y;
 
-    for (int i = 0; i < input_id_locations.size(); i++) {
-      Location adjacent_location = input_id_locations[i];
-      adjacent_location.x += offset[adj_tile].x;
-      adjacent_location.y += offset[adj_tile].y;
-
-      if (adjacent_location.x < 0 || adjacent_location.x >= input_width ||
-          adjacent_location.y < 0 || adjacent_location.y >= input_height)
+      if (id_location.x < 0 || id_location.x >= input_width ||
+          id_location.y < 0 || id_location.y >= input_height)
         continue;
 
-      int new_state = input[adjacent_location.x][adjacent_location.y];
+      int new_state = input[id_location.x][id_location.y];
 
+      bool is_in_new_combinations = false;
       bool is_in_combinations = false;
 
       // TODO: Replace with sort and binary search
 
       for (int state : new_combination)
         if (state == new_state) {
+          is_in_new_combinations = true;
+          break;
+        }
+
+      for (int state : current->combinations)
+        if (state == new_state) {
           is_in_combinations = true;
           break;
         }
 
-      if (!is_in_combinations) {
-        new_combination.push_back(
-            input[adjacent_location.x][adjacent_location.y]);
+      if (!is_in_new_combinations && is_in_combinations) {
+        new_combination.push_back(new_state);
       }
     }
+  }
 
-    Location adjacent_tile =
-        Location(l.x + offset[adj_tile].x, l.y + offset[adj_tile].y);
+  // TODO: Handle collisions rather than brute forcing them
+  if (!new_combination.size())
+    return 2;
 
-    if (adjacent_tile.x < 0 || adjacent_tile.x >= input_width ||
-        adjacent_tile.y < 0 || adjacent_tile.y >= input_height)
+  current->combinations = new_combination;
+  current->updated = true;
+
+  for (int i = 0; i < 4; i++) {
+    Location next_tile = l;
+    next_tile.x += offsets[i].x;
+    next_tile.y += offsets[i].y;
+
+    if (next_tile.x < 0 || next_tile.x >= output_width || next_tile.y < 0 ||
+        next_tile.y >= output_height)
       continue;
 
-    GetTile(adjacent_tile)->combinations = new_combination;
+    WaveFunction *next = GetTile(next_tile);
+
+    if (!next->updated) {
+      UpdateTile(next_tile, l, offsets[i]);
+    }
   }
+
+  return 0;
 }
 
 void TileGeneration::CollapseTile() {
+  int i = 0;
+
   Location l;
 
   if (!max_entropy)
@@ -116,14 +142,36 @@ void TileGeneration::CollapseTile() {
   }
 
   WaveFunction *tile = GetTile(l);
-  int i = rand() % tile->Entropy();
-  tile->combinations = {tile->combinations[i]};
+  int n = rand() % tile->Entropy();
 
-  UpdateAdjTiles(l);
+  printf("%d %d %d %d\n", l.x, l.y, GetTile(l)->Entropy(),
+         GenerationComplete());
+
+  tile->combinations = {tile->combinations[n]};
+  tile->updated = true;
+
+RETRY:
+  Location next_tile = l;
+  next_tile.x += offsets[i].x;
+  next_tile.y += offsets[i].y;
+
+  int result = UpdateTile(next_tile, l, offsets[i]);
+
+  for (int i = 0; i < output_width; i++)
+    for (int j = 0; j < output_height; j++)
+      GetTile(Location(i, j))->updated = false;
+
+  if (result == 1) {
+    i = (i + 1) % 4;
+    goto RETRY;
+  } else if (result == 2) {
+    max_entropy = true;
+    CollapseTile();
+  }
 }
 
 int **TileGeneration::Generate() {
-  while (!generation_complete)
+  while (!GenerationComplete())
     CollapseTile();
 
   int **output = (int **)calloc(output_width, sizeof(int *));
