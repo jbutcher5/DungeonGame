@@ -1,5 +1,4 @@
 #include "wfc.hpp"
-#include <cstdio>
 #include <cstdlib>
 #include <vector>
 
@@ -101,6 +100,7 @@ int TileGeneration::UpdateTile(Location l, const Location comparee,
   }
 
   // TODO: Handle collisions rather than brute forcing them
+
   if (!new_combination.size())
     return 2;
 
@@ -143,9 +143,6 @@ void TileGeneration::CollapseTile() {
 
   WaveFunction *tile = GetTile(l);
   int n = rand() % tile->Entropy();
-
-  printf("%d %d %d %d\n", l.x, l.y, GetTile(l)->Entropy(),
-         GenerationComplete());
 
   tile->combinations = {tile->combinations[n]};
   tile->updated = true;
