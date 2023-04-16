@@ -13,8 +13,6 @@ int main(void) {
   srand(seed);
   srand48(rand() * seed);
 
-  printf("%d\n", seed);
-
   Player player = Player();
 
   int **input = (int **)calloc(6, sizeof(int *));
@@ -71,13 +69,45 @@ int main(void) {
 
   int **output = t.Generate();
 
-  puts("OUTPUT:");
+  int buffer[20 * 24 * 3];
 
   for (int i = 0; i < 20; i++) {
-    for (int j = 0; j < 24; j++)
-      printf("%d ", output[j][i]);
-    puts("");
+    for (int j = 0; j < 24; j++) {
+      int pixel[3];
+
+      if (output[j][i] == 0) {
+        pixel[0] = 0;
+        pixel[1] = 0;
+        pixel[2] = 255;
+      }
+
+      if (output[j][i] == 1) {
+        pixel[0] = 255;
+        pixel[1] = 255;
+        pixel[2] = 0;
+      }
+
+      if (output[j][i] == 2) {
+        pixel[0] = 0;
+        pixel[1] = 255;
+        pixel[2] = 0;
+      }
+
+      int start = (i * 24 + j) * 3;
+
+      buffer[start] = pixel[0];
+      buffer[start + 1] = pixel[1];
+      buffer[start + 2] = pixel[2];
+    }
   }
+
+  puts("P3 24 20 255");
+
+  for (int i = 0; i < 20 * 24 * 3; i++) {
+    printf("%d ", buffer[i]);
+  }
+
+  puts("");
 
   /*
   while (!WindowShouldClose()) {
