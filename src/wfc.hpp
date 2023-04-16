@@ -35,9 +35,7 @@ protected:
 
   std::vector<Location> *id_locations;
 
-  bool max_entropy = true;
-
-  std::vector<Location> update_adjacent_queue = {};
+  bool get_random_tile = true;
 
   inline WaveFunction *GetTile(Location l) { return buffer[l.x] + l.y; }
   int UpdateTile(Location l, Location comparee, Location direction);

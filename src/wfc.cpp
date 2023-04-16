@@ -131,14 +131,14 @@ void TileGeneration::CollapseTile() {
 
   Location l;
 
-  if (!max_entropy)
+  if (!get_random_tile)
     l = GetMinEntropy();
 
   else {
     l.x = rand() % output_width;
     l.y = rand() % output_height;
 
-    max_entropy = false;
+    get_random_tile = false;
   }
 
   WaveFunction *tile = GetTile(l);
@@ -162,7 +162,7 @@ RETRY:
     i = (i + 1) % 4;
     goto RETRY;
   } else if (result == 2) {
-    max_entropy = true;
+    get_random_tile = true;
     CollapseTile();
   }
 }
