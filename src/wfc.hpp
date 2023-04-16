@@ -3,6 +3,14 @@
 #include <ctime>
 #include <vector>
 
+struct Location {
+  int x;
+  int y;
+
+  Location(int x, int y) : x(x), y(y){};
+  Location() : Location(0, 0){};
+};
+
 class WaveFunction {
 public:
   std::vector<int> combinations;
@@ -12,14 +20,7 @@ public:
       combinations.push_back(n);
   }
   bool updated = false;
-};
-
-struct Location {
-  int x;
-  int y;
-
-  Location(int x, int y) : x(x), y(y){};
-  Location() : Location(0, 0){};
+  Location comparison;
 };
 
 class TileGeneration {
@@ -33,13 +34,18 @@ protected:
   const int output_width;
   const int output_height;
 
+  const int max_id;
+
   std::vector<Location> *id_locations;
+
+  std::vector<Location> update_queue;
 
   bool get_random_tile = true;
 
   inline WaveFunction *GetTile(Location l) { return buffer[l.x] + l.y; }
-  int UpdateTile(Location l, Location comparee, Location direction);
+  int UpdateTile(Location l, Location comparee);
   void CollapseTile();
+  void PopulateQueue(Location initial);
   bool GenerationComplete();
   Location GetMinEntropy();
 
